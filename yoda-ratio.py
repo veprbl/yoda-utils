@@ -26,6 +26,5 @@ if __name__ == '__main__':
 	r = ao / ao2
 	r.path = ao.path
 	r.setAnnotation("LogY", 0)
-	print dir(r)
 	out_aos.append(r)
     yoda.writeYODA(out_aos, output_filename)
