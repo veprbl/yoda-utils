@@ -9,13 +9,16 @@ import sys
 import yoda
 
 def process(item):
-    if not isinstance(item, yoda.core.Histo1D):
-        return item
-    hist = item
-    s = yoda.Scatter2D(item.path)
-    for hbin in hist:
-        s.addPoint(hbin.xMid, hbin.height, xerrs=[hbin.xWidth/2, hbin.xWidth/2])
-    return s
+    if isinstance(item, yoda.core.Histo1D):
+        s = yoda.Scatter2D(item.path)
+        for hbin in item:
+            s.addPoint(hbin.xMid, hbin.height, xerrs=[hbin.xWidth/2, hbin.xWidth/2])
+        return s
+    elif isinstance(item, yoda.core.Scatter2D):
+        for point in item:
+            point.yErrs=(0,0)
+	return item
+    return item
 
 if __name__ == '__main__':
     if (len(sys.argv) != 3):
