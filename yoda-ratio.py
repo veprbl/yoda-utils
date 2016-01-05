@@ -9,7 +9,7 @@ import yoda
 if __name__ == '__main__':
     if (len(sys.argv) != 4):
         print "Usage: %s numerator denominator output" % sys.argv[0]
-	sys.exit()
+        sys.exit()
 
     numerator_filename = sys.argv[1]
     denominator_filename = sys.argv[2]
@@ -23,8 +23,8 @@ if __name__ == '__main__':
         if not isinstance(ao, yoda.core.Histo1D):
             continue
         ao2 = aos2[ao.path]
-	r = ao / ao2
-	r.path = ao.path
-	r.setAnnotation("LogY", 0)
-	out_aos.append(r)
+        r = ao / ao2
+        r.path = ao.path
+        r.setAnnotation("LogY", 0)
+        out_aos.append(r)
     yoda.writeYODA(out_aos, output_filename)
