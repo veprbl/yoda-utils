@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import argparse
+
 import yoda
 import numpy as np
 
@@ -19,26 +21,37 @@ def master_formula(get_value_func, num_members):
     return val_0
 
 class XSec(object):
-    pass
+    def __init__(self, ao):
+        self.xs = np.array([x.xMid for x in ao])
+        self.xs_low = np.array([x.xMin for x in ao])
+        self.xs_high = np.array([x.xMax for x in ao])
+        self.ys = np.array([x.height for x in ao])
 
-def read_xsec(filepath):
-    y = yoda.read(filepath)
-    h = y['/STAR_DIJET/d01-x01-y01']
-    xsec = XSec()
-    xsec.xs = np.array([x.xMid for x in h])
-    xsec.xs_low = np.array([x.xMin for x in h])
-    xsec.xs_high = np.array([x.xMax for x in h])
-    xsec.ys = np.array([x.sumW for x in h]) / (xsec.xs_high - xsec.xs_low)
-    return xsec
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--output", required=True, help="Path to the output file")
+    parser.add_argument("-c", "--central", required=True, help="Central values input file")
+    parser.add_argument("-t", "--type", required=True, choices=["hessian"], help="PDF error vectors type")
+    parser.add_argument("other", nargs='*', help="Other input files")
+    args = parser.parse_args()
 
-def get_xsec(member):
-    filepath = "../CT10nlo_%02i.yoda" % member
-    return read_xsec(filepath)
+    central_aos = yoda.read(args.central)
+    output_aos = []
+    for ao in central_aos.values():
+        if not isinstance(ao, yoda.core.Histo1D):
+            continue
+        print ao.path
+        num_members = len(args.other)
+        def get_xsec(member):
+            if member == 0:
+                return XSec(ao)
+            y = yoda.read(args.other[member-1])
+            member_ao = y[ao.path]
+            return XSec(member_ao)
+        xsec = master_formula(get_xsec, num_members)
+        s = yoda.Scatter2D(ao.path)
+        for (low, center, high, y, dp, dn) in zip(xsec.xs_low, xsec.xs, xsec.xs_high, xsec.ys, xsec.dys_p, xsec.dys_n):
+            s.addPoint(center, y, xerrs=[center-low, high-center], yerrs=[dn, dp])
+        output_aos.append(s)
 
-xsec = master_formula(get_xsec, 52)
-
-s = yoda.Scatter2D("/STAR_DIJET/d01-x01-y01")
-for (low, center, high, y, dp, dn) in zip(xsec.xs_low, xsec.xs, xsec.xs_high, xsec.ys, xsec.dys_p, xsec.dys_n):
-    s.addPoint(center, y, xerrs=[center-low, high-center], yerrs=[dn, dp])
-
-yoda.writeYODA([s], "pdf.yoda")
+    yoda.writeYODA(output_aos, args.output)
