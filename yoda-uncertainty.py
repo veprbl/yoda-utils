@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# TODO: allow supplying a confidence interval multiplier
+
 import argparse
 
 import yoda

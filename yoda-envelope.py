@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
     output_aos = []
     for central_ao in central.values():
+        if central_ao.path.startswith("/STAR_2006_S6870392"): continue
         other_aos = [other_ao[central_ao.path] for other_ao in other]
         envelope_ao = envelope(central_ao, other_aos)
         if envelope_ao is not None:
